@@ -22,33 +22,33 @@ class HpatoioBitlyExtension extends Extension
     {
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
-        
+
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yml');
-        
+
         $container->setParameter( 'hpatoio_bitly.access_token', $config['access_token'] );
-        
+
         if (isset($config['file_log_format'])) {
-            
+
             $logFormat = $config['file_log_format'];
             if (in_array($logFormat, array('default', 'debug', 'short'))) {
                 $logFormat = constant(sprintf('Guzzle\Log\MessageFormatter::%s_FORMAT', strtoupper($logFormat)));
             }
-            
+
             $container->setParameter( 'hpatoio_bitly.log.format', $logFormat );
-        
+
             $loader->load('monolog_service.yml');
-            
+
             $serviceDefinition = $container->findDefinition('hpatoio_bitly.client');
             $serviceDefinition->addMethodCall('addSubscriber', array(new Reference('hpatoio_bitly.log.monolog')));
-        
+
         }
-        
-        if (isset($config['profiler'])) {
+
+        if (isset($config['profiler']) && $config['profiler'] === 'on') {
             $loader->load('profiler_service.yml');
             $serviceDefinition = $container->findDefinition('hpatoio_bitly.client');
             $serviceDefinition->addMethodCall('addSubscriber', array(new Reference('hpatoio_bitly.log.array')));
         }
-        
+
     }
 }
